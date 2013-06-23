@@ -51,9 +51,15 @@ void modeIdle(){
   analogWrite(analogOutPin, fadeLevel);
   //calculate next level
   fadeLevel = fadeLevel + fadeAmount;
-  
 }
 
+
+
+
+void modeLevel1(int level){
+  analogWrite(analogOutPin, level * 10);
+}
+  
 
 
 
@@ -87,6 +93,10 @@ void loop() {
     // whatever the delta is at, it's been there for longer
     // than the debounce delay, so write the sensor value:
     analogWrite(analogOutPin, outputValue);
+    
+    
+    //update the timestamp
+    timestamp = millis();
     Serial.println("!!!");
   }else if((millis() - timestamp) > timeout){
     modeIdle();
