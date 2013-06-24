@@ -55,6 +55,9 @@ void modeIdle(){
   analogWrite(analogOutPin1, fadeLevel);
   //calculate next level
   fadeLevel = fadeLevel + fadeAmount;
+  //turn unnessesary light off
+  
+  analogWrite(analogOutPin2, 0);
 }
 ///////////////////////////////////////
 
@@ -82,7 +85,7 @@ void modeLevel2(int level){
     level = 255;
   }
   analogWrite(analogOutPin1, 255);
-  analogWrite(analogOutPin2, 255);
+  analogWrite(analogOutPin2, level);  
 }
 /////////////////////////////////////// 
 
@@ -111,7 +114,7 @@ void loop() {
     */
     
     // change the analog out value if no bouncing:
-    if(delta <= 0){
+    if(delta <= 1){
       // reset the debouncing timer
       lastDebounceTime = millis();
     }
@@ -136,13 +139,20 @@ void loop() {
     timestamp = millis();
     Serial.print("!!! ");
     Serial.print(counter);
-  //if some time passes w/o any movement, switch to idle mode
+  //if some time passes w/o any movement, decrease and switch to idle mode
   }else if((millis() - timestamp) > timeout){
-    //therefor reset the counter for the effect level
-    counter = 0;
-    //and call idle function
-    modeIdle();
-  
+    if(counter > 0){
+      //therefor decrease the counter for the effect level
+      counter = counter--;
+      if(counter * 10 < 255){
+      modeLevel1(counter);
+      }else{
+        modeLevel2(counter);
+      }
+    }else{
+      //and call idle function
+      modeIdle();
+    } 
 }
     
   
@@ -150,9 +160,6 @@ void loop() {
   // print the results to the serial monitor:
   Serial.print("\t sensor = " );                       
   Serial.println(sensorValue);
-  
-  
-  
   Serial.print("\t delta = " );                       
   Serial.print(delta);  
   /*
