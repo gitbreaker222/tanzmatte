@@ -8,10 +8,12 @@ const int analogOutPin2 = 9;
 
 // w/ multible sensors we need a) the number of connected sensors and b) an array
 // where to save the messured values:
-int numberOfSensors = 2;
-int sensorValues[] = {0, 0};
-int lastSensorValues[] = {0, 0};
-int delta[] = {0, 0};
+const int numberOfSensors = 2;
+int sensorValues[numberOfSensors];
+//...and the last messured values...
+int lastSensorValues[numberOfSensors];
+//...to calculate the delta for each sensor
+int delta[numberOfSensors];
 
 /* variables used for one-sensor-level:
 int sensorValue = 0;        // value read from the pot
@@ -19,14 +21,14 @@ int lastSensorValue = 0;    // saves the last messured value
 int delta = 0;              // the difference between current and last sensor value
 */
 
-// instead of delay(10) at the end of the loop to settle the analog-digital converter,
+// instead of delay(10) at the end of the loop (Examples > Analog > AnalogInOutSerial),
 // the last analogRead-time is saved, to not interrupting the whole program
 long lastAnalogReadTime = 0;
 
 
 //variables for the debounce
-long lastDebounceTime = 0;  // the last time the delta was toggled
-long debounceDelay = 40;    // the debounce time; increase if the output flickers
+long lastDebounceTimes[numberOfSensors];  // the last time the delta was toggled
+long debounceDelay = 120;    // the debounce time; increase if the output flickers
 
 
 
@@ -108,69 +110,83 @@ void loop() {
   if((millis() - lastAnalogReadTime) > 15){ // (millis() - lastAnalogReadTime) > XXms)
     
     //messure every sensor one after another - i equals the analogInPin
-    for(int i = 0; i < 2; i++){
+    for(int i = 0; i < numberOfSensors; i++){
       // read the analog in value for the current pin:
-      sensorValue = analogRead(i);
-      /*
-      //calculate the difference to the last value - also just the current one!
-      delta = sensorValue - lastSensorValue;
-      lastSensorValue = sensorValue;
-      */
+      sensorValues[i] = analogRead(i);
       
-      /*
+      //calculate the difference to the last value...
+      delta[i] = sensorValues[i] - lastSensorValues[i];
+      //and update the lastSensorValue to the current array slot
+      lastSensorValues[i] = sensorValues[i];
+      
+      
       // change the analog out value if no bouncing:
-      if(delta <= 1){
+      if(delta[i] <= 1){
         // reset the debouncing timer
-        lastDebounceTime = millis();
+        lastDebounceTimes[i] = millis();
       }
-      */
+      
       
       // print the results to the serial monitor:
       Serial.print("sensor " );
       Serial.print(i);
       Serial.print(" = " );
-      Serial.println(sensorValue);
-      /*
+      Serial.print(sensorValues[i]);
       Serial.print("\t delta = " );                       
-      Serial.print(delta);  
-      */
+      Serial.println(delta[i]);  
     }
-    
+    Serial.println(millis());
+    Serial.println("messure loop over");
     lastAnalogReadTime = millis();
-  }  
+  }
   
+  // now the arrays are freshly filled with data - time to make use of it:
+  // first of all we set up a new loop to check the deltas for markable rises
+  for(int i = 0; i < numberOfSensors; i++){
+    
+    //then we check the debounce of the current delta
+    if ((millis() - lastDebounceTimes[i]) > debounceDelay) {
+      // whatever the current delta is at, it's been high long enough
+      // than the debounce delay, so count one "jump" that should have
+      // happend right now:
+      counter = counter++;
+      //(counter will be reset after a while --> idle mode)
+      Serial.println("counter increase");
+      
+      //update the timestamp to save the last "jump-time"
+      timestamp = millis();
+    } 
+  }
+  // (From here on the uniqe sonsors are unrelevant, so no need for loop-array-checking)
   
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    // whatever the delta is at, it's been higher long enough
-    // than the debounce delay, so switch to mode Level 1:
+  //...now switch to the effect-level-functions and send counter
+  if(counter * 10 < 255){   //few jumps trigger level 1
+    modeLevel1(counter);
+  }else{                    //many jumps trigger higher levels
+    modeLevel2(counter);
+  }
     
-    //...and count the "number of jumps" for increasing effects
-    //(counter will be reset after a while --> idle mode)
-    counter = counter++;
-    //...now switch to the funcion and send counter"
-    if(counter * 10 < 255){
-      modeLevel1(counter);
-    }else{
-      modeLevel2(counter);
-    }
     
-    //update the timestamp
-    timestamp = millis();
-  //if some time passes w/o any movement, decrease and switch to idle mode
-  }else if((millis() - timestamp) > timeout){
+  //if some time passes w/o any movement, decrease counter and switch to idle mode
+  if((millis() - timestamp) > timeout){
     if(counter > 0){
       //therefor decrease the counter for the effect level
       counter = counter--;
+      
+      /*
       if(counter * 10 < 255){
       modeLevel1(counter);
       }else{
         modeLevel2(counter);
       }
+      */
       //let the fade-out be more slow
-      delay(6);
+      
     }else{
       //and call idle function
       modeIdle();
     } 
   }
+  Serial.println(millis());
+  Serial.println("whole loop over");
 }
