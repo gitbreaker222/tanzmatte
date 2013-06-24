@@ -112,7 +112,7 @@ void loop() {
   //if some time passes w/o any movement, switch to idle mode
   }else if((millis() - timestamp) > timeout){
     //therefor reset the counter for the effect level
-    counter = 0
+    counter = 0;
     //and call idle function
     modeIdle();
   
