@@ -6,16 +6,23 @@ const int analogInPin2 = A1;
 const int analogOutPin1 = 5;  // Analog output pin that the LED is attached to
 const int analogOutPin2 = 9;
 
+// w/ multible sensors we need a) the number of connected sensors and b) an array
+// where to save the messured values:
+int numberOfSensors = 2;
+int sensorValues[] = {0, 0};
+int lastSensorValues[] = {0, 0};
+int delta[] = {0, 0};
+
+/* variables used for one-sensor-level:
+int sensorValue = 0;        // value read from the pot
+int lastSensorValue = 0;    // saves the last messured value
+int delta = 0;              // the difference between current and last sensor value
+*/
+
 // instead of delay(10) at the end of the loop to settle the analog-digital converter,
 // the last analogRead-time is saved, to not interrupting the whole program
 long lastAnalogReadTime = 0;
 
-
-int sensorValue = 0;        // value read from the pot
-int lastSensorValue = 0;    // saves the last messured value
-int delta = 0;              // the difference between current and last sensor value
-int lastDelta = 0;
-int outputValue = 0;        // value output to the PWM (analog out)
 
 //variables for the debounce
 long lastDebounceTime = 0;  // the last time the delta was toggled
