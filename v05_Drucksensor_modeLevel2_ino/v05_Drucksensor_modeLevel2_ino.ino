@@ -2,7 +2,8 @@
 // These constants won't change.  They're used to give names
 // to the pins used:
 const int analogInPin = A0;  // Analog input pin that the potentiometer is attached to
-const int analogOutPin = 9;  // Analog output pin that the LED is attached to
+const int analogOutPin1 = 9;  // Analog output pin that the LED is attached to
+const int analogOutPin2 = 5;
 
 // instead of delay(10) at the end of the loop, the last analogRead-time
 // is saved, to settle the analog-digital converter w/o interrupting the whole program
@@ -17,7 +18,7 @@ int outputValue = 0;        // value output to the PWM (analog out)
 
 //variables for the debounce
 long lastDebounceTime = 0;  // the last time the delta was toggled
-long debounceDelay = 50;    // the debounce time; increase if the output flickers
+long debounceDelay = 40;    // the debounce time; increase if the output flickers
 
 
 
@@ -51,7 +52,7 @@ void modeIdle(){
   }
 
   //write the signalamount
-  analogWrite(analogOutPin, fadeLevel);
+  analogWrite(analogOutPin1, fadeLevel);
   //calculate next level
   fadeLevel = fadeLevel + fadeAmount;
 }
@@ -64,12 +65,28 @@ void modeIdle(){
 // function for the first effect level
 void modeLevel1(int level){
   level = level * 10;
-  if(level >= 255){
+  if(level > 255){
     level = 255;
   }
-  analogWrite(analogOutPin, level);
+  analogWrite(analogOutPin1, level);
 }
-///////////////////////////////////////  
+/////////////////////////////////////// 
+
+
+
+///////////////////////////////////////
+// function for the second effect level
+void modeLevel2(int level){
+  level = (level-25) * 10;
+  if(level > 255){
+    level = 255;
+  }
+  analogWrite(analogOutPin1, 255);
+  analogWrite(analogOutPin2, 255);
+}
+/////////////////////////////////////// 
+
+
 
 
 
@@ -109,7 +126,11 @@ void loop() {
     //(counter will be reset after a while --> idle mode)
     counter = counter++;
     //...now switch to the funcion and send counter"
-    modeLevel1(counter);
+    if(counter * 10 < 255){
+      modeLevel1(counter);
+    }else{
+      modeLevel2(counter);
+    }
     
     //update the timestamp
     timestamp = millis();
@@ -131,9 +152,10 @@ void loop() {
   Serial.println(sensorValue);
   
   
-  /*
+  
   Serial.print("\t delta = " );                       
   Serial.print(delta);  
+  /*
   Serial.print("\t output = ");      
   Serial.println(outputValue);   
 */
