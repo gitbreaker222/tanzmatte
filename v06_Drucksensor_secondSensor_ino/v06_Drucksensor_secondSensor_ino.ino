@@ -1,12 +1,13 @@
 
 // These constants won't change.  They're used to give names
 // to the pins used:
-const int analogInPin = A0;  // Analog input pin that the potentiometer is attached to
-const int analogOutPin1 = 9;  // Analog output pin that the LED is attached to
-const int analogOutPin2 = 5;
+const int analogInPin1 = A0;  // Analog input pin that the potentiometer is attached to
+const int analogInPin2 = A1;
+const int analogOutPin1 = 5;  // Analog output pin that the LED is attached to
+const int analogOutPin2 = 9;
 
-// instead of delay(10) at the end of the loop, the last analogRead-time
-// is saved, to settle the analog-digital converter w/o interrupting the whole program
+// instead of delay(10) at the end of the loop to settle the analog-digital converter,
+// the last analogRead-time is saved, to not interrupting the whole program
 long lastAnalogReadTime = 0;
 
 
@@ -55,8 +56,8 @@ void modeIdle(){
   analogWrite(analogOutPin1, fadeLevel);
   //calculate next level
   fadeLevel = fadeLevel + fadeAmount;
-  //turn unnessesary light off
   
+  //turn unnessesary light off
   analogWrite(analogOutPin2, 0);
 }
 ///////////////////////////////////////
@@ -94,32 +95,43 @@ void modeLevel2(int level){
 
 
 void loop() {
-  // wait 10 milliseconds before the next messure
+  // wait XX milliseconds before the next messure
   // for the analog-to-digital converter to settle
   // after the last reading:
-  if((millis() - lastAnalogReadTime) > 10){
+  if((millis() - lastAnalogReadTime) > 15){ // (millis() - lastAnalogReadTime) > XXms)
     
-    // read the analog in value:
-    sensorValue = analogRead(analogInPin);
-    //calculate the difference to the last value
-    delta = sensorValue - lastSensorValue;
-    lastSensorValue = sensorValue;
-    lastAnalogReadTime = millis();
-    
-
-  
-    /*
-    // map it to the range of the analog out:
-    outputValue = map(sensorValue, 0, 80, 0, 255);
-    */
-    
-    // change the analog out value if no bouncing:
-    if(delta <= 1){
-      // reset the debouncing timer
-      lastDebounceTime = millis();
+    //messure every sensor one after another - i equals the analogInPin
+    for(int i = 0; i < 2; i++){
+      // read the analog in value for the current pin:
+      sensorValue = analogRead(i);
+      /*
+      //calculate the difference to the last value - also just the current one!
+      delta = sensorValue - lastSensorValue;
+      lastSensorValue = sensorValue;
+      */
+      
+      /*
+      // change the analog out value if no bouncing:
+      if(delta <= 1){
+        // reset the debouncing timer
+        lastDebounceTime = millis();
+      }
+      */
+      
+      // print the results to the serial monitor:
+      Serial.print("sensor " );
+      Serial.print(i);
+      Serial.print(" = " );
+      Serial.println(sensorValue);
+      /*
+      Serial.print("\t delta = " );                       
+      Serial.print(delta);  
+      */
     }
     
+    lastAnalogReadTime = millis();
   }  
+  
   
   if ((millis() - lastDebounceTime) > debounceDelay) {
     // whatever the delta is at, it's been higher long enough
@@ -137,8 +149,6 @@ void loop() {
     
     //update the timestamp
     timestamp = millis();
-    Serial.print("!!! ");
-    Serial.print(counter);
   //if some time passes w/o any movement, decrease and switch to idle mode
   }else if((millis() - timestamp) > timeout){
     if(counter > 0){
@@ -155,19 +165,5 @@ void loop() {
       //and call idle function
       modeIdle();
     } 
-}
-    
-  
-
-  // print the results to the serial monitor:
-  Serial.print("\t sensor = " );                       
-  Serial.println(sensorValue);
-  Serial.print("\t delta = " );                       
-  Serial.print(delta);  
-  /*
-  Serial.print("\t output = ");      
-  Serial.println(outputValue);   
-*/
-
-  
+  }
 }
