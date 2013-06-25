@@ -104,41 +104,38 @@ void modeLevel2(int level){
 
 
 void loop() {
-  // wait XX milliseconds before the next messure
-  // for the analog-to-digital converter to settle
-  // after the last reading:
-  if((millis() - lastAnalogReadTime) > 15){ // (millis() - lastAnalogReadTime) > XXms)
+  //messure every sensor one after another - i equals the analogInPin
+  for(int i = 0; i < numberOfSensors; i++){
+    // read the analog in value for the current pin:
+    sensorValues[i] = analogRead(i);
     
-    //messure every sensor one after another - i equals the analogInPin
-    for(int i = 0; i < numberOfSensors; i++){
-      // read the analog in value for the current pin:
-      sensorValues[i] = analogRead(i);
-      
-      //calculate the difference to the last value...
-      delta[i] = sensorValues[i] - lastSensorValues[i];
-      //and update the lastSensorValue to the current array slot
-      lastSensorValues[i] = sensorValues[i];
-      
-      
-      // change the analog out value if no bouncing:
-      if(delta[i] <= 1){
-        // reset the debouncing timer
-        lastDebounceTimes[i] = millis();
-      }
-      
-      
-      // print the results to the serial monitor:
-      Serial.print("sensor " );
-      Serial.print(i);
-      Serial.print(" = " );
-      Serial.print(sensorValues[i]);
-      Serial.print("\t delta = " );                       
-      Serial.println(delta[i]);  
+    //calculate the difference to the last value...
+    delta[i] = sensorValues[i] - lastSensorValues[i];
+    //and update the lastSensorValue to the current array slot
+    lastSensorValues[i] = sensorValues[i];
+    
+    
+    // change the analog out value if no bouncing:
+    if(delta[i] <= 1){
+      // reset the debouncing timer
+      lastDebounceTimes[i] = millis();
     }
-    Serial.println(millis());
-    Serial.println("messure loop over");
-    lastAnalogReadTime = millis();
+    //wait 9ms for the analog-digital-converter to settle
+    delay(9);
+    
+    
+    // print the results to the serial monitor:
+    Serial.print("sensor " );
+    Serial.print(i);
+    Serial.print(" = " );
+    Serial.print(sensorValues[i]);
+    Serial.print("\t delta = " );                       
+    Serial.println(delta[i]);  
   }
+  Serial.println(millis());
+  Serial.println("messure loop over");
+  lastAnalogReadTime = millis();
+ 
   
   // now the arrays are freshly filled with data - time to make use of it:
   // first of all we set up a new loop to check the deltas for markable rises
