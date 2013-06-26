@@ -42,7 +42,7 @@ long debounceDelay = 180;    // the debounce time; increase if the output flicke
 long timer = 0;
 
 // countdown is, how fast the sand depletes (ms)
-long countdown = 10;
+long countdown = 30;
 
 /* 
    instead of the zero point of an hourglass, "millis" is running on and on
@@ -167,10 +167,7 @@ void loop() {
   
   //calculate the difference to the time of the last loop
   deltaT = millis() - lastMillis;
-  lastMillis = millis();     
-        Serial.print("lastMillis = ");
-        Serial.println(lastMillis);
-        
+  lastMillis = millis();
         Serial.print("deltaT = ");
         Serial.println(deltaT);
   
@@ -184,13 +181,13 @@ void loop() {
   
   //and finally we look for our effect-o-meter :)
   effectOmeter = millis() - timer;
-        Serial.print("effectOmeter = ");
+        Serial.print("\t \t \teffectOmeter = ");
         Serial.println(effectOmeter);
   //3333333333333333333333333333333333//
   
   
   //4444444444444444444444444444444444//
-  // here we evaluate the effect-o-meter
+  // here we evaluate the effectOmeter
   counter = map(effectOmeter, 0 ,5000 ,0 ,255);
         Serial.println(counter);
   
@@ -199,7 +196,7 @@ void loop() {
   
   //4444444444444444444444444444444444//
   
-  Serial.println("whole loop over");
+  Serial.println("____________________");
 }
 
 
