@@ -41,6 +41,9 @@ long debounceDelay = 70;    // the debounce time; increase if the output flicker
 // if "millis()" is the hourglass, "timer" is the depleted sand
 long timer = 0;
 
+// countdown is, how fast the sand depletes (ms)
+long countdown = 10;
+
 /* 
    instead of the zero point of an hourglass, "millis" is running on and on
    therefor this little time progress every loop needs to be calculated and
@@ -50,7 +53,7 @@ long lastMillis = 0;  //value of the last loop
 long deltaT = 0;      // difference to the last loop
 
 // this is the remaining sand
-long effect-o-meter = 0;
+long effectOmeter = 0;
 
 //VARIABLES FOR THE EFFECT LEVELS
 // LEVEL 0
@@ -94,11 +97,8 @@ void modeIdle(){
 
 ///////////////////////////////////////
 // function for LV.1
-void modeLevel1(int level){
-  level = level * 10;
-  if(level > 255){
-    level = 255;
-  }
+void Level1(int level){
+  //test effect: light up the led normal
   analogWrite(analogOutPin1, level);
 }
 /////////////////////////////////////// 
@@ -107,7 +107,7 @@ void modeLevel1(int level){
 
 ///////////////////////////////////////
 // function for LV.2
-void modeLevel2(int level){
+void Level2(int level){
   level = (level-25) * 10;
   if(level > 255){
     level = 255;
@@ -154,47 +154,49 @@ void loop() {
       // reset the debouncing timer
       lastDebounce[i] = millis();
     }else if((millis() - lastDebounce[i]) >= debounceDelay){
-      // else - if debounce high enough - throw some sand in hourglass
-      timer = timer - 30
+      // else - if debounce high enough - throw some sand in hourglass (ms)
+      timer = timer - 100;
+    }
    }
   //2222222222222222222222222222222222//
   
+  
   //3333333333333333333333333333333333//
   // (From here on the uniqe sonsors are unrelevant, so no need for loop-array-checking)
-  // now lets depli
+  // now lets deplete some sand
   
+  //calculate the difference to the time of the last loop
+  deltaT = millis() - lastMillis;
   
+  //then add this difference to the timer, to balance time progress
+  timer = timer + deltaT;
   
-  
-  
-  //...now switch to the effect-level-functions and send counter
-  if(counter * 10 < 255){   //few jumps trigger level 1
-    modeLevel1(counter);
-  }else{                    //many jumps trigger higher levels
-    modeLevel2(counter);
+  //timer then moves towards millis (this reverse zero point)
+  if(timer + countdown <= millis()){
+    timer = timer + countdown;
   }
-    
-    
-  //if some time passes w/o any movement, decrease counter and switch to idle mode
-  if((millis() - timestamp) > timeout){
-    if(counter > 0){
-      //therefor decrease the counter for the effect level
-      counter = counter--;
-      
-      /*
-      if(counter * 10 < 255){
-      modeLevel1(counter);
-      }else{
-        modeLevel2(counter);
-      }
-      */
-      //let the fade-out be more slow
-      
-    }else{
-      //and call idle function
-      modeIdle();
-    } 
-  }
-  Serial.println(millis());
+  
+  //and finally we look for our effect-o-meter :)
+  effectOmeter = millis() - timer;
+  //3333333333333333333333333333333333//
+  
+  
+  //4444444444444444444444444444444444//
+  // here we evaluate the effect-o-meter
+  counter = map(effectOmeter, 0 ,5000 ,0 ,255);
+  
+  //and call the test function
+  Level1(counter);
+  
+  //4444444444444444444444444444444444//
+  
   Serial.println("whole loop over");
 }
+
+
+
+
+
+
+
+
