@@ -33,7 +33,7 @@ int delta[numberOfSensors];
 
 //2 VARIABLES FOR DEBOUNCE
 long lastDebounce[numberOfSensors];  // the last time the delta was toggled
-long debounceDelay = 70;    // the debounce time; increase if the output flickers
+long debounceDelay = 180;    // the debounce time; increase if the output flickers
 
 
 
@@ -167,6 +167,12 @@ void loop() {
   
   //calculate the difference to the time of the last loop
   deltaT = millis() - lastMillis;
+  lastMillis = millis();     
+        Serial.print("lastMillis = ");
+        Serial.println(lastMillis);
+        
+        Serial.print("deltaT = ");
+        Serial.println(deltaT);
   
   //then add this difference to the timer, to balance time progress
   timer = timer + deltaT;
@@ -178,12 +184,15 @@ void loop() {
   
   //and finally we look for our effect-o-meter :)
   effectOmeter = millis() - timer;
+        Serial.print("effectOmeter = ");
+        Serial.println(effectOmeter);
   //3333333333333333333333333333333333//
   
   
   //4444444444444444444444444444444444//
   // here we evaluate the effect-o-meter
   counter = map(effectOmeter, 0 ,5000 ,0 ,255);
+        Serial.println(counter);
   
   //and call the test function
   Level1(counter);
